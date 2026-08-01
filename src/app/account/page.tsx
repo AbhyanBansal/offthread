@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { auth, signIn, signOut } from "@/lib/auth";
 import { getDefaultAddress, getUserOrders } from "@/lib/db/queries";
 import { formatPaise } from "@/lib/money";
@@ -9,6 +10,9 @@ export const metadata = { title: "Account" };
 
 export default async function AccountPage() {
   const session = await auth();
+
+  // Admins never shop — send them to the dashboard.
+  if (session?.user?.role === "admin") redirect("/admin");
 
   if (!session?.user) {
     return (

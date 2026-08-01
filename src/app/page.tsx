@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { bounceAdminToDashboard } from "@/lib/guard";
 
 const ETHOS = [
   {
@@ -20,7 +21,9 @@ const ETHOS = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  await bounceAdminToDashboard();
+
   return (
     <>
       <section className="border-b border-border">

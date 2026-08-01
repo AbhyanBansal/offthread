@@ -4,10 +4,12 @@ import { auth } from "@/lib/auth";
 import { getDefaultAddress } from "@/lib/db/queries";
 import { computeShipping, formatPaise } from "@/lib/money";
 import { CheckoutForm } from "@/components/shop/checkout-form";
+import { bounceAdminToDashboard } from "@/lib/guard";
 
 export const metadata = { title: "Checkout" };
 
 export default async function CheckoutPage() {
+  await bounceAdminToDashboard();
   const cart = await getCart();
   if (cart.items.length === 0) redirect("/cart");
 

@@ -4,10 +4,12 @@ import { formatPaise } from "@/lib/money";
 import { CartItemRow } from "@/components/shop/cart-item-row";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { bounceAdminToDashboard } from "@/lib/guard";
 
 export const metadata = { title: "Bag" };
 
 export default async function CartPage() {
+  await bounceAdminToDashboard();
   const cart = await getCart();
 
   return (
