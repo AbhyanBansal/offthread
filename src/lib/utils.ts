@@ -1,9 +1,12 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
 
-/** Merge Tailwind class names, resolving conflicts so the last one wins. */
+/**
+ * Merge class names. We use plain clsx (no tailwind-merge) to keep the Worker
+ * bundle small; call sites add non-conflicting utilities, so conflict
+ * resolution isn't needed.
+ */
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return clsx(inputs);
 }
 
 /** URL-safe slug from arbitrary text. */
