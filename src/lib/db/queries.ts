@@ -6,6 +6,7 @@ import {
   orders,
   productImages,
   products,
+  reviews,
   variants,
 } from "@/lib/db/schema";
 
@@ -114,6 +115,18 @@ export async function getUserOrders(userId: string) {
       createdAt: true,
     },
   });
+}
+
+/** Reviews for a product (newest first) with the reviewer's name + summary. */
+export async function getProductReviews(productId: string) {
+  const rows = await db.query.reviews.findMany({
+    where: eq(reviews.productId, productId),
+    orderBy: [desc(reviews.createdAt)],
+    with: { user: { columns: { name: true, image: true } } },
+  });
+  const count = rows.length;
+  const avg = count ? rows.reduce((sum, r) => sum + r.rating, 0) / count : 0;
+  return { reviews: rows, count, avg };
 }
 
 export type ProductListItem = Awaited<

@@ -268,10 +268,43 @@ export const addresses = pgTable(
   (t) => [index("addresses_user_idx").on(t.userId)],
 );
 
+// ── Reviews ────────────────────────────────────────────────────
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    rating: integer("rating").notNull(), // 1–5
+    body: text("body"),
+    photos: jsonb("photos").$type<string[]>(), // up to 2 R2 object keys
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    unique("reviews_product_user_uq").on(t.productId, t.userId),
+    index("reviews_product_idx").on(t.productId),
+  ],
+);
+
 // ── Relations (for Drizzle's relational query API) ─────────────
 export const productsRelations = relations(products, ({ many }) => ({
   images: many(productImages),
   variants: many(variants),
+  reviews: many(reviews),
+}));
+
+export const reviewsRelations = relations(reviews, ({ one }) => ({
+  product: one(products, {
+    fields: [reviews.productId],
+    references: [products.id],
+  }),
+  user: one(users, { fields: [reviews.userId], references: [users.id] }),
 }));
 
 export const productImagesRelations = relations(productImages, ({ one }) => ({

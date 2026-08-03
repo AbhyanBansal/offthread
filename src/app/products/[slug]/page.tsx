@@ -5,6 +5,7 @@ import { SizePicker } from "@/components/shop/size-picker";
 import { ProductGallery } from "@/components/shop/product-gallery";
 import { SizeGuideModal } from "@/components/shop/size-guide-modal";
 import { ProductAccordions } from "@/components/shop/product-accordions";
+import { ReviewsSection } from "@/components/shop/reviews-section";
 
 export const revalidate = 60;
 
@@ -124,6 +125,8 @@ export default async function ProductPage({ params }: Params) {
           ) : null}
         </div>
       </div>
+
+      <ReviewsSection productId={product.id} slug={product.slug} />
     </div>
   );
 }

@@ -33,7 +33,7 @@ export default async function Home() {
         <div className="pointer-events-none absolute inset-0 bg-background">
           <div
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('/hero.jpg')" }}
+            style={{ backgroundImage: "url('/hero.png')" }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-background/60" />
