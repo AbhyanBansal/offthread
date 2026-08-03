@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gt, ne, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   addresses,
@@ -8,6 +8,25 @@ import {
   products,
   variants,
 } from "@/lib/db/schema";
+
+/**
+ * An order that never completed payment within 10 minutes is treated as
+ * "dropped" — it must not appear to the customer or in the admin panel.
+ * Visible orders are those that aren't pending, or are still within the grace
+ * window.
+ */
+export function notDroppedOrder() {
+  const cutoff = new Date(Date.now() - 10 * 60 * 1000);
+  return or(ne(orders.status, "pending"), gt(orders.createdAt, cutoff));
+}
+
+/** A single order by number, only if it hasn't been dropped. */
+export async function getVisibleOrderByNumber(orderNumber: string) {
+  return db.query.orders.findFirst({
+    where: and(eq(orders.orderNumber, orderNumber), notDroppedOrder()),
+    with: { items: true },
+  });
+}
 
 /** Active products (optionally filtered), with images + variants, newest first. */
 export async function getActiveProducts(filters?: {
@@ -86,7 +105,7 @@ export async function getDefaultAddress(userId: string) {
 /** Order history for a logged-in user, newest first. */
 export async function getUserOrders(userId: string) {
   return db.query.orders.findMany({
-    where: eq(orders.userId, userId),
+    where: and(eq(orders.userId, userId), notDroppedOrder()),
     orderBy: [desc(orders.createdAt)],
     columns: {
       orderNumber: true,

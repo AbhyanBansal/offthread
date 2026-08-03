@@ -1,11 +1,12 @@
 import "server-only";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { orders, products } from "@/lib/db/schema";
+import { orders, productImages, products, variants } from "@/lib/db/schema";
+import { notDroppedOrder } from "@/lib/db/queries";
 
 export async function getOrderByNumber(orderNumber: string) {
   return db.query.orders.findFirst({
-    where: eq(orders.orderNumber, orderNumber),
+    where: and(eq(orders.orderNumber, orderNumber), notDroppedOrder()),
     with: { items: true },
   });
 }
@@ -17,6 +18,17 @@ export async function getAdminProducts() {
   });
 }
 
+/** Full product (images + variants) for the admin edit form. */
+export async function getAdminProductById(id: string) {
+  return db.query.products.findFirst({
+    where: eq(products.id, id),
+    with: {
+      images: { orderBy: [asc(productImages.position)] },
+      variants: { orderBy: [asc(variants.position)] },
+    },
+  });
+}
+
 export async function getRevenueSummary() {
   const [row] = await db
     .select({
@@ -24,7 +36,8 @@ export async function getRevenueSummary() {
       paidCount: sql<number>`count(*) filter (where ${orders.status} in ('paid','fulfilled'))`,
       totalCount: sql<number>`count(*)`,
     })
-    .from(orders);
+    .from(orders)
+    .where(notDroppedOrder());
 
   return {
     revenue: Number(row?.revenue ?? 0),
@@ -35,6 +48,7 @@ export async function getRevenueSummary() {
 
 export async function getRecentOrders(limit = 50) {
   return db.query.orders.findMany({
+    where: notDroppedOrder(),
     orderBy: [desc(orders.createdAt)],
     limit,
     columns: {

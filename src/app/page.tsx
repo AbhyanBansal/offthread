@@ -26,10 +26,22 @@ export default async function Home() {
 
   return (
     <>
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <section className="relative overflow-hidden border-b border-border">
+        {/* Campaign backdrop — fades behind the headline. Drop the image at
+            public/hero.jpg. Uses a CSS background so a missing file just falls
+            back to the dark hero (no broken-image icon). */}
+        <div className="pointer-events-none absolute inset-0 bg-background">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url('/hero.jpg')" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-background/60" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex min-h-[calc(100vh-8rem)] flex-col justify-center py-20">
-            <div className="inline-flex w-fit items-center gap-2 border border-border px-4 py-2">
+            <div className="inline-flex w-fit items-center gap-2 border border-border bg-background/40 px-4 py-2 backdrop-blur-sm">
               <span className="h-2 w-2 rounded-full bg-accent" />
               <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted">
                 Cut 01 — Now shipping

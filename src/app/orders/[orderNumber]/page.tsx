@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
-import { db } from "@/lib/db";
-import { orders } from "@/lib/db/schema";
+import { getVisibleOrderByNumber } from "@/lib/db/queries";
 import { formatPaise } from "@/lib/money";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,10 +12,7 @@ type Params = { params: Promise<{ orderNumber: string }> };
 export default async function OrderPage({ params }: Params) {
   const { orderNumber } = await params;
 
-  const order = await db.query.orders.findFirst({
-    where: eq(orders.orderNumber, orderNumber),
-    with: { items: true },
-  });
+  const order = await getVisibleOrderByNumber(orderNumber);
   if (!order) notFound();
 
   const paid = order.status === "paid" || order.status === "fulfilled";

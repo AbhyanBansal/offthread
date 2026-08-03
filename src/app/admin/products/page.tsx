@@ -60,6 +60,12 @@ export default async function AdminProductsPage() {
                 <span className="font-mono text-xs">
                   {formatPaise(p.basePrice)}
                 </span>
+                <Link
+                  href={`/admin/products/${p.id}/edit`}
+                  className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted transition-colors hover:text-foreground"
+                >
+                  Edit
+                </Link>
                 <DeleteProductButton id={p.id} name={p.name} />
               </li>
             );

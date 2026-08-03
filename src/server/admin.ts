@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { productImages, products, variants } from "@/lib/db/schema";
@@ -129,4 +129,134 @@ export async function deleteProduct(productId: string) {
   revalidatePath("/admin/products");
   revalidatePath("/shop");
   revalidatePath("/");
+}
+
+const updateSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().trim().min(1).max(160),
+  color: z.string().trim().min(1).max(60),
+  category: z.string().trim().min(1).max(80),
+  description: z.string().trim().max(4000).optional().default(""),
+  priceRupees: z.coerce.number().positive().max(1_000_000),
+  sizes: z
+    .array(
+      z.object({
+        size: z.string().trim().min(1).max(10),
+        stock: z.coerce.number().int().min(0).max(100000),
+      }),
+    )
+    .min(1),
+  removeImageIds: z.array(z.string()).default([]),
+  newImageKeys: z.array(z.string().min(1)).default([]),
+  details: z.object({
+    fabric: z.string().trim().optional(),
+    gsm: z.coerce.number().optional(),
+    fit: z.string().trim().optional(),
+    neck: z.string().trim().optional(),
+    sleeves: z.string().trim().optional(),
+    frontPrint: z.string().trim().optional(),
+    backPrint: z.string().trim().optional(),
+    keyFeatures: z.array(z.string().trim()).optional(),
+    washCare: z.array(z.string().trim()).optional(),
+  }),
+});
+
+export async function updateProduct(raw: unknown) {
+  await requireAdmin();
+  const data = updateSchema.parse(raw);
+
+  const product = await db.query.products.findFirst({
+    where: eq(products.id, data.id),
+    columns: { id: true, slug: true },
+  });
+  if (!product) throw new Error("Product not found");
+
+  await db
+    .update(products)
+    .set({
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      color: data.color,
+      basePrice: Math.round(data.priceRupees * 100),
+      details: data.details,
+      updatedAt: new Date(),
+    })
+    .where(eq(products.id, product.id));
+
+  // --- Sync variants (match by size) ---
+  const existingVariants = await db.query.variants.findMany({
+    where: eq(variants.productId, product.id),
+  });
+  const desiredSizes = new Set(data.sizes.map((s) => s.size));
+
+  for (const v of existingVariants) {
+    if (!desiredSizes.has(v.size)) {
+      await db.delete(variants).where(eq(variants.id, v.id));
+    }
+  }
+  for (let i = 0; i < data.sizes.length; i++) {
+    const s = data.sizes[i];
+    const existing = existingVariants.find((v) => v.size === s.size);
+    if (existing) {
+      await db
+        .update(variants)
+        .set({ stockQty: s.stock, position: i })
+        .where(eq(variants.id, existing.id));
+    } else {
+      await db.insert(variants).values({
+        productId: product.id,
+        sku: `${product.slug}-${s.size}-${Math.random().toString(36).slice(2, 6)}`.toUpperCase(),
+        size: s.size,
+        stockQty: s.stock,
+        position: i,
+      });
+    }
+  }
+
+  // --- Sync images ---
+  if (data.removeImageIds.length > 0) {
+    await db
+      .delete(productImages)
+      .where(
+        and(
+          eq(productImages.productId, product.id),
+          inArray(productImages.id, data.removeImageIds),
+        ),
+      );
+  }
+  if (data.newImageKeys.length > 0) {
+    const remaining = await db.query.productImages.findMany({
+      where: eq(productImages.productId, product.id),
+      columns: { position: true },
+    });
+    const startPos =
+      remaining.reduce((max, r) => Math.max(max, r.position), -1) + 1;
+    await db.insert(productImages).values(
+      data.newImageKeys.map((key, i) => ({
+        productId: product.id,
+        s3Key: key,
+        position: startPos + i,
+        isPrimary: false,
+      })),
+    );
+  }
+  // Guarantee exactly one primary image.
+  const imgs = await db.query.productImages.findMany({
+    where: eq(productImages.productId, product.id),
+    orderBy: [asc(productImages.position)],
+    columns: { id: true, isPrimary: true },
+  });
+  if (imgs.length > 0 && !imgs.some((im) => im.isPrimary)) {
+    await db
+      .update(productImages)
+      .set({ isPrimary: true })
+      .where(eq(productImages.id, imgs[0].id));
+  }
+
+  revalidatePath("/shop");
+  revalidatePath("/");
+  revalidatePath(`/products/${product.slug}`);
+  revalidatePath("/admin/products");
+  return { slug: product.slug };
 }
