@@ -26,11 +26,13 @@ export function CartItemRow({ item }: { item: Item }) {
   const setQty = (qty: number) =>
     startTransition(async () => {
       await updateCartItem(item.id, qty);
+      window.dispatchEvent(new Event("cart:updated"));
     });
 
   const remove = () =>
     startTransition(async () => {
       await removeCartItem(item.id);
+      window.dispatchEvent(new Event("cart:updated"));
     });
 
   const atMax = item.qty >= item.stockQty;

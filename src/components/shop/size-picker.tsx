@@ -65,6 +65,7 @@ export function SizePicker({
           startTransition(async () => {
             await addToCart(selected);
             setAdded(true);
+            window.dispatchEvent(new Event("cart:updated"));
           });
         }}
       >
