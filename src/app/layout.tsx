@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Anton, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Marquee } from "@/components/layout/marquee";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { PWARegister } from "@/components/pwa-register";
 
 const anton = Anton({
   weight: "400",
@@ -31,6 +32,16 @@ export const metadata: Metadata = {
   },
   description:
     "Heavyweight 240 GSM cotton tees with original graphics. Made in Delhi, dropped in limited numbers.",
+  applicationName: "OFFTHREAD",
+  appleWebApp: {
+    capable: true,
+    title: "OFFTHREAD",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#141210",
 };
 
 export default function RootLayout({
@@ -42,6 +53,7 @@ export default function RootLayout({
       className={`${anton.variable} ${inter.variable} ${jetbrainsMono.variable} h-full`}
     >
       <body className="flex min-h-full flex-col antialiased">
+        <PWARegister />
         <Marquee />
         <Header />
         <main className="flex-1">{children}</main>
