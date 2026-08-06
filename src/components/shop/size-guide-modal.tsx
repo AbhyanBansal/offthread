@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { SizeChart } from "@/components/shop/size-chart";
 
-export function SizeGuideModal() {
+export function SizeGuideModal({ category }: { category?: string | null }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export function SizeGuideModal() {
               </button>
             </div>
             <div className="mt-6">
-              <SizeChart />
+              <SizeChart category={category} />
             </div>
           </div>
         </div>

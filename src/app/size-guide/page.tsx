@@ -8,8 +8,19 @@ export default function SizeGuidePage() {
       <h1 className="font-display text-5xl uppercase leading-none sm:text-6xl">
         Size guide
       </h1>
-      <div className="mt-8">
-        <SizeChart />
+      <div className="mt-10 space-y-12">
+        <div>
+          <h2 className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-accent">
+            Oversized fit
+          </h2>
+          <SizeChart category="Oversized" />
+        </div>
+        <div>
+          <h2 className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-accent">
+            Boxy fit
+          </h2>
+          <SizeChart category="Boxy" />
+        </div>
       </div>
     </div>
   );

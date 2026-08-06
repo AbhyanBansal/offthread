@@ -35,11 +35,11 @@ function AccordionItem({
   );
 }
 
-export function ProductAccordions() {
+export function ProductAccordions({ category }: { category?: string | null }) {
   return (
     <div className="mt-8 border-t border-border">
       <AccordionItem title="Size chart">
-        <SizeChart />
+        <SizeChart category={category} />
       </AccordionItem>
       <AccordionItem title="Returns & exchanges">
         <ReturnPolicy />

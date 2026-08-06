@@ -61,14 +61,14 @@ export default async function ProductPage({ params }: Params) {
 
           <div className="mt-8 max-w-md">
             <SizePicker
-              headerAction={<SizeGuideModal />}
+              headerAction={<SizeGuideModal category={product.category} />}
               variants={product.variants.map((v) => ({
                 id: v.id,
                 size: v.size,
                 stockQty: v.stockQty,
               }))}
             />
-            <ProductAccordions />
+            <ProductAccordions category={product.category} />
           </div>
         </div>
       </div>
